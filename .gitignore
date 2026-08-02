@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Next.js / Expo / build outputs
+.next/
+out/
+dist/
+.expo/
+.expo-shared/
+web-build/
+build/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Prisma / local DB
+prisma/dev.db
+prisma/*.db*
+
+# Uploads and generated media
+public/uploads/
+**/uploads/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# OS/editor junk
+.DS_Store
+.vscode/
+.idea/

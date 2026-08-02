@@ -1,0 +1,72 @@
+# SOP Platform - Mobile App (React Native / Expo)
+# ================================================
+
+## Prerequisites
+- Node.js 18+
+- npm or yarn
+- Expo CLI: npm install -g expo-cli
+- For iOS: macOS + Xcode 15+
+- For Android: Android Studio + SDK 34+
+- Expo Go app on physical device (for testing)
+
+## Architecture
+- Framework: React Native with Expo SDK 51
+- Navigation: Expo Router (file-based)
+- State: React Context + AsyncStorage for auth token
+- HTTP: fetch (native) hitting the Next.js API
+- Backend: Same sop-platform Next.js API (no changes needed)
+
+## API Base URL
+- Development: http://localhost:3000 (or your local IP for physical devices)
+- Production: https://yourdomain.com (Hostinger VPS)
+
+## Build & Deploy
+- iOS: eas build --platform ios → Submit to App Store via App Store Connect
+- Android: eas build --platform android → Submit to Play Store via Play Console
+
+## Accounts Required
+- Apple Developer Account ($99/year) - for iOS App Store
+- Google Play Developer ($25 one-time) - for Play Store
+- Expo Account (free) - for EAS Build service
+
+## Setup Steps
+1. cd sop-mobile
+2. npm install
+3. Update API_BASE_URL in src/config.ts to your backend URL
+4. npx expo start (opens in Expo Go for testing)
+5. eas build --platform all (production builds)
+
+## Key Packages
+- expo ~51.0.0
+- expo-router ~3.5.0
+- @react-native-async-storage/async-storage ~1.23.0
+- expo-image-picker ~15.0.0
+- expo-file-system ~17.0.0
+- expo-document-picker ~12.0.0
+- react-native-safe-area-context ~4.10.0
+
+## Features Matching Web Platform
+- Login (credentials-based, same API)
+- View SOPs by department
+- Fill Google Forms-style fields (text, radio, checkbox, dropdown, date, yes/no/na, file/image upload)
+- Save draft
+- Submit SOP
+- View my submissions
+- Download/share PDF
+- Push notifications (future: Expo Notifications)
+- Role-based views (User/Admin)
+
+## Folder Structure
+sop-mobile/
+├── app/                  # Expo Router pages
+│   ├── (auth)/           # Login/signup screens
+│   ├── (tabs)/           # Main app tabs
+│   └── _layout.tsx       # Root layout
+├── src/
+│   ├── components/       # Shared components
+│   ├── config.ts         # API URL config
+│   ├── context/          # Auth context
+│   └── types.ts          # TypeScript types
+├── package.json
+├── app.json              # Expo config
+└── tsconfig.json

@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String?
+  name          String
+  role          String    @default("USER")
+  departmentId  String?
+  emailVerified Boolean   @default(false)
+  isActive      Boolean   @default(true)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  department        Department?       @relation(fields: [departmentId], references: [id])
+  submissions       SOPSubmission[]
+  drafts            SOPDraft[]
+  notifications     Notification[]
+  assignedSOPs      ProjectSOP[]      @relation("AssignedUser")
+}
+
+model Department {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users       User[]
+  templates   SOPTemplate[]
+  submissions SOPSubmission[]
+  projects    Project[]
+}
+
+model Project {
+  id           String   @id @default(cuid())
+  name         String
+  client       String
+  departmentId String
+  startDate    String?
+  endDate      String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  department  Department      @relation(fields: [departmentId], references: [id])
+  submissions SOPSubmission[]
+  projectSOPs ProjectSOP[]
+}
+
+// Admin assigns department SOPs to a project + user
+model ProjectSOP {
+  id           String   @id @default(cuid())
+  projectId    String
+  templateId   String
+  assigneeId   String
+  dueDate      String?
+  status       String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, OVERDUE
+  notes        String?
+  assignedAt   DateTime @default(now())
+  completedAt  DateTime?
+
+  project    Project     @relation(fields: [projectId], references: [id])
+  template   SOPTemplate @relation(fields: [templateId], references: [id])
+  assignee   User        @relation("AssignedUser", fields: [assigneeId], references: [id])
+  submission SOPSubmission? @relation
+
+  @@unique([projectId, templateId, assigneeId])
+}
+
+model SOPTemplate {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  departmentId String
+  fields       String
+  createdBy    String
+  approverIds  String?  // JSON array of user IDs who must approve
+  isActive     Boolean  @default(true)
+  isDaily      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  department  Department      @relation(fields: [departmentId], references: [id])
+  submissions SOPSubmission[]
+  drafts      SOPDraft[]
+  projectSOPs ProjectSOP[]
+}
+
+model SOPSubmission {
+  id            String    @id @default(cuid())
+  templateId    String
+  userId        String
+  departmentId  String
+  projectId     String?
+  projectSOPId  String?   @unique
+  title         String
+  responses     String
+  files         String
+  status        String    @default("SUBMITTED") // SUBMITTED, PENDING_APPROVAL, APPROVED, REJECTED
+  approvalToken String?   @unique
+  approvedBy    String?
+  approvedAt    DateTime?
+  rejectionNote String?
+  submittedAt   DateTime  @default(now())
+
+  template   SOPTemplate  @relation(fields: [templateId], references: [id])
+  user       User         @relation(fields: [userId], references: [id])
+  department Department   @relation(fields: [departmentId], references: [id])
+  project    Project?     @relation(fields: [projectId], references: [id])
+  projectSOP ProjectSOP?  @relation(fields: [projectSOPId], references: [id])
+}
+
+model SOPDraft {
+  id           String   @id @default(cuid())
+  templateId   String
+  userId       String
+  title        String
+  responses    String
+  files        String
+  projectId    String?
+  savedAt      DateTime @default(now()) @updatedAt
+
+  template SOPTemplate @relation(fields: [templateId], references: [id])
+  user     User        @relation(fields: [userId], references: [id])
+
+  @@unique([templateId, userId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  message   String
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
