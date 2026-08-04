@@ -17,17 +17,23 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    const res = await signIn('credentials', {
-      email,
-      password,
-      redirect: false,
-    })
+    try {
+      const res = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      })
 
-    if (res?.error) {
-      setError('Invalid email or password. Make sure your email is verified.')
-      setLoading(false)
-    } else {
+      if (res?.error) {
+        setError('Invalid email or password. Make sure your email is verified and the account is active.')
+        setLoading(false)
+        return
+      }
+
       router.push('/dashboard')
+    } catch (err) {
+      setError('Unable to sign in right now. Please try again in a moment.')
+      setLoading(false)
     }
   }
 
