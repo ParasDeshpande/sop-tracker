@@ -18,20 +18,49 @@ export default function EditTemplatePage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/departments').then(r => r.json()),
-      fetch(`/api/templates/${params.id}`).then(r => r.json()),
-    ]).then(([depts, template]) => {
-      setDepartments(depts)
-      setForm({
-        title: template.title,
-        departmentId: template.departmentId,
-        isActive: template.isActive,
-        checklist: template.checklist.map((c: any) => typeof c === 'string' ? { item: c, required: true } : c),
-        fileLabels: template.fileLabels.map((f: any) => typeof f === 'string' ? { label: f, required: false } : f),
-      })
-      setLoading(false)
-    })
+    const loadTemplate = async () => {
+      try {
+        const [deptsRes, templateRes] = await Promise.all([
+          fetch('/api/departments'),
+          fetch(`/api/templates/${params.id}`),
+        ])
+
+        const depts = await deptsRes.json()
+        const template = await templateRes.json()
+
+        setDepartments(depts)
+
+        const fields = Array.isArray(template.fields) ? template.fields : []
+        const checklist = fields
+          .filter((field: any) => field?.type === 'checkbox' || field?.type === 'section_header' || field?.type === 'short_text' || field?.type === 'long_text')
+          .map((field: any) => ({ item: field?.label || '', required: Boolean(field?.required) }))
+
+        const fileLabels = fields
+          .filter((field: any) => field?.type === 'file_upload' || field?.type === 'image')
+          .map((field: any) => ({ label: field?.label || '', required: Boolean(field?.required) }))
+
+        setForm({
+          title: template.title || '',
+          departmentId: template.departmentId || '',
+          isActive: template.isActive ?? true,
+          checklist: checklist.length > 0 ? checklist : [{ item: '', required: true }],
+          fileLabels: fileLabels.length > 0 ? fileLabels : [{ label: '', required: false }],
+        })
+      } catch (error) {
+        console.error('Failed to load template for edit page', error)
+        setForm({
+          title: '',
+          departmentId: '',
+          isActive: true,
+          checklist: [{ item: '', required: true }],
+          fileLabels: [{ label: '', required: false }],
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadTemplate()
   }, [params.id])
 
   const addChecklistItem = () => setForm({ ...form, checklist: [...form.checklist, { item: '', required: true }] })
@@ -53,19 +82,42 @@ export default function EditTemplatePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
-    const res = await fetch(`/api/templates/${params.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+
+    try {
+      const payload = {
         title: form.title,
         departmentId: form.departmentId,
         isActive: form.isActive,
-        checklist: form.checklist.filter(c => c.item),
-        fileLabels: form.fileLabels.filter(f => f.label),
-      }),
-    })
-    if (res.ok) router.push('/dashboard/templates')
-    setSaving(false)
+        description: '',
+        isDaily: false,
+        fields: [
+          ...form.checklist.filter(c => c.item).map((item, index) => ({
+            id: `checklist-${index}`,
+            type: 'short_text',
+            label: item.item,
+            required: item.required,
+          })),
+          ...form.fileLabels.filter(f => f.label).map((item, index) => ({
+            id: `file-${index}`,
+            type: 'file_upload',
+            label: item.label,
+            required: item.required,
+          })),
+        ],
+      }
+
+      const res = await fetch(`/api/templates/${params.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (res.ok) router.push('/dashboard/templates')
+    } catch (error) {
+      console.error('Failed to save template', error)
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (loading) return <div className="p-6">Loading...</div>
