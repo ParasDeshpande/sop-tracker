@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import { FormField } from '@/lib/field-types'
 
 interface Template {
   title: string
+  description?: string
   department: { name: string }
-  checklist: { item: string; required: boolean }[]
-  fileLabels: { label: string; required: boolean }[]
+  fields?: FormField[]
 }
 
 export default function PreviewTemplatePage() {
@@ -16,7 +17,10 @@ export default function PreviewTemplatePage() {
   const [template, setTemplate] = useState<Template | null>(null)
 
   useEffect(() => {
-    fetch(`/api/templates/${params.id}`).then(r => r.json()).then(setTemplate)
+    fetch(`/api/templates/${params.id}`)
+      .then(r => r.json())
+      .then(setTemplate)
+      .catch(() => setTemplate(null))
   }, [params.id])
 
   if (!template) return <div className="p-6">Loading...</div>
@@ -31,34 +35,54 @@ export default function PreviewTemplatePage() {
       <div className="bg-white p-6 rounded-lg shadow space-y-6">
         <div className="border-b pb-4">
           <h2 className="text-xl font-semibold">{template.title}</h2>
-          <p className="text-sm text-gray-500">{template.department.name}</p>
+          {template.description && <p className="text-sm text-gray-500 mt-1">{template.description}</p>}
+          <p className="text-sm text-gray-500 mt-2">{template.department?.name}</p>
         </div>
 
-        <div>
-          <p className="text-sm font-medium text-gray-700 mb-1">SOP Title</p>
-          <div className="w-full border rounded px-3 py-2 bg-gray-50 text-gray-400 text-sm">User will enter title here...</div>
-        </div>
+        {(template.fields || []).map((field, i) => (
+          <div key={field.id || i} className="border rounded p-4 bg-gray-50">
+            {field.type === 'section_header' ? (
+              <div className="border-b-2 border-gray-200 pb-2">
+                <h3 className="font-semibold text-gray-700">{field.label}</h3>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm font-medium text-gray-700">
+                  {field.label} {field.required && <span className="text-red-500">*</span>}
+                </p>
+                {field.type === 'short_text' && <div className="mt-2 border-b border-gray-300 py-2 text-sm text-gray-400">Short answer text</div>}
+                {field.type === 'long_text' && <div className="mt-2 border rounded p-2 text-sm text-gray-400 h-16">Long answer text</div>}
+                {field.type === 'number' && <div className="mt-2 border-b border-gray-300 py-2 text-sm text-gray-400">123</div>}
+                {field.type === 'phone_number' && <div className="mt-2 border-b border-gray-300 py-2 text-sm text-gray-400">+91 98765 43210</div>}
+                {field.type === 'currency' && <div className="mt-2 border-b border-gray-300 py-2 text-sm text-gray-400">₹ 1,000.00</div>}
+                {field.type === 'date' && <div className="mt-2 border rounded px-3 py-2 text-sm text-gray-400 w-40">mm/dd/yyyy</div>}
+                {field.type === 'time' && <div className="mt-2 border rounded px-3 py-2 text-sm text-gray-400 w-32">--:-- --</div>}
+                {field.type === 'file_upload' && <div className="mt-2 border border-dashed rounded p-3 text-sm text-gray-500">File upload area</div>}
+                {field.type === 'image' && <div className="mt-2 border border-dashed rounded p-3 text-sm text-gray-500">Image upload area</div>}
+                {(field.type === 'radio' || field.type === 'dropdown' || field.type === 'checkbox') && (
+                  <div className="mt-2 space-y-2">
+                    {field.options?.map((opt, idx) => (
+                      <label key={idx} className="flex items-center gap-2 text-sm text-gray-600">
+                        {field.type === 'checkbox' ? <input type="checkbox" disabled /> : <input type="radio" disabled />}
+                        <span>{opt}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+                {field.type === 'yes_no_na' && (
+                  <div className="mt-2 flex gap-4 text-sm text-gray-600">
+                    <span>YES</span><span>NO</span><span>NA</span>
+                  </div>
+                )}
+                {(field.type === 'number' || field.type === 'currency') && field.comparisonOperator && field.comparisonOperator !== 'none' && field.comparisonValue && (
+                  <p className="mt-2 text-xs text-primary-600">Eligibility rule: value {field.comparisonOperator} {field.comparisonValue}</p>
+                )}
+              </>
+            )}
+          </div>
+        ))}
 
-        <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">Checklist</p>
-          {template.checklist.map((c, i) => (
-            <label key={i} className="flex items-center gap-2 py-1">
-              <input type="checkbox" disabled className="rounded" />
-              <span className="text-sm">{c.item}</span>
-              {c.required && <span className="text-xs text-red-500">*required</span>}
-            </label>
-          ))}
-        </div>
-
-        <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">Document Uploads</p>
-          {template.fileLabels.map((f, i) => (
-            <div key={i} className="mb-2 p-3 border rounded bg-gray-50">
-              <p className="text-sm text-gray-600">{f.label} {f.required && <span className="text-red-500">*required</span>}</p>
-              <p className="text-xs text-gray-400 mt-1">File upload field</p>
-            </div>
-          ))}
-        </div>
+        {(!template.fields || template.fields.length === 0) && <p className="text-sm text-gray-500">No fields yet for this template.</p>}
 
         <div className="text-xs text-gray-400 border-t pt-4">
           This is how the SOP form will appear to users. Required fields must be completed before submission.
