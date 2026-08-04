@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname,  useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { useEffect, useState } from 'react'
 
@@ -11,6 +11,7 @@ interface SidebarProps {
 
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'
   const isSuperAdmin = user.role === 'SUPER_ADMIN'
   const [unreadCount, setUnreadCount] = useState(0)
@@ -63,7 +64,13 @@ export function Sidebar({ user }: SidebarProps) {
       <div className="p-4 border-t">
         <p className="text-sm font-medium truncate">{user.name}</p>
         <p className="text-xs text-gray-500">{user.role.replace('_', ' ')}</p>
-        <button onClick={() => signOut({ callbackUrl: '/login' })} className="mt-2 text-xs text-red-600 hover:underline">
+        <button
+          onClick={async () => {
+            await signOut({ redirect: false })
+            router.replace('/login')
+          }}
+          className="mt-2 text-xs text-red-600 hover:underline"
+        >
           Sign Out
         </button>
       </div>
