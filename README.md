@@ -8,32 +8,32 @@ A full-stack SOP (Standard Operating Procedures) management platform for Sumedha
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         CLIENTS                                      │
-├──────────────┬──────────────────┬────────────────────────────────────┤
-│  Web App     │  iOS App         │  Android App                       │
+│                         CLIENTS                                     │
+├──────────────┬──────────────────┬───────────────────────────────────┤
+│  Web App     │  iOS App         │  Android App                      │
 │  (Next.js)   │  (React Native)  │  (React Native)                   │
-│  Browser     │  Expo / App Store│  Expo / Play Store                 │
-└──────┬───────┴────────┬─────────┴──────────┬─────────────────────────┘
+│  Browser     │  Expo / App Store│  Expo / Play Store                │
+└──────┬───────┴────────┬─────────┴──────────┬────────────────────────┘
        │                │                    │
        └────────────────┼────────────────────┘
                         │ HTTPS (JSON)
                         ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    BACKEND (Next.js API Routes)                       │
-│                    Hosted on Hostinger VPS                            │
+│                    BACKEND (Next.js API Routes)                     │
+│                    Hosted on Hostinger VPS                          │
 ├─────────────────────────────────────────────────────────────────────┤
-│  Auth (NextAuth.js)  │  Submissions API  │  Approval System          │
-│  Templates API       │  Projects API     │  Notifications            │
-│  Reports / Export    │  File Uploads     │  Email (SMTP)             │
-└──────────────────────┴──────────┬────────┴───────────────────────────┘
+│  Auth (NextAuth.js)  │  Submissions API  │  Approval System         │
+│  Templates API       │  Projects API     │  Notifications           │
+│  Reports / Export    │  File Uploads     │  Email (SMTP)            │
+└──────────────────────┴──────────┬────────┴──────────────────────────┘
                                   │
                                   ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    DATABASE (MySQL on Hostinger)                      │
-│                    SQLite for local development                       │
+│                    DATABASE (Postgresql on Hostinger)               │
+│                    Postgresql for local development                 │
 ├─────────────────────────────────────────────────────────────────────┤
 │  Users  │  Departments  │  Projects  │  Templates  │  Submissions   │
-│  Drafts │  Notifications│  ProjectSOPs (assignments)                 │
+│  Drafts │  Notifications│  ProjectSOPs (assignments)                │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -213,7 +213,7 @@ Required accounts:
 
 ---
 
-## Production Deployment (Hostinger VPS)
+## Production Deployment (Hostinger VPS / aws)
 
 ### 1. Server Setup
 
@@ -230,17 +230,16 @@ npm install -g pm2
 apt install -y nginx
 ```
 
-### 2. MySQL Database
+### 2. postgresql Database
 
 ```bash
-apt install -y mysql-server
-mysql_secure_installation
+apt install -y postgresql postgresql-contrib
 
-mysql -u root -p
+sudo -u postgres psql
 > CREATE DATABASE sop_platform;
-> CREATE USER 'sop_user'@'localhost' IDENTIFIED BY 'StrongPassword!';
-> GRANT ALL ON sop_platform.* TO 'sop_user'@'localhost';
-> FLUSH PRIVILEGES;
+> CREATE USER sop_user WITH PASSWORD 'StrongPassword!';
+> GRANT ALL PRIVILEGES ON DATABASE sop_platform TO sop_user;
+> \q
 ```
 
 ### 3. Deploy App
