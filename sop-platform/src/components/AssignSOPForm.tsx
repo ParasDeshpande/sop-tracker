@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 
 interface Props {
   projectId: string
-  templates: { id: string; title: string; departmentName: string }[]
+  templates: { id: string; title: string }[]
   users: { id: string; name: string; email: string }[]
 }
 
@@ -42,11 +42,7 @@ export function AssignSOPForm({ projectId, templates, users }: Props) {
           <label className="block text-xs text-gray-500 mb-1">SOP Template</label>
           <select value={templateId} onChange={e => setTemplateId(e.target.value)} required className="w-full border rounded px-2 py-1.5 text-sm">
             <option value="">Select SOP</option>
-            {templates.map(t => (
-              <option key={t.id} value={t.id}>
-                {t.title} ({t.departmentName})
-              </option>
-            ))}
+            {templates.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
           </select>
         </div>
         <div className="flex-1 min-w-[160px]">
