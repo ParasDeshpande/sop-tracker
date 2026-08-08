@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import DeleteTemplateButton from '@/components/DeleteTemplateButton'
 
 export default async function TemplatesPage() {
   const session = await getServerSession(authOptions)
@@ -56,6 +57,7 @@ export default async function TemplatesPage() {
                 <td className="px-4 py-3 flex gap-2">
                   <Link href={`/dashboard/templates/${t.id}/edit`} className="text-xs text-primary-600 hover:underline">Edit</Link>
                   <Link href={`/dashboard/templates/${t.id}/preview`} className="text-xs text-green-600 hover:underline">Preview</Link>
+                  <DeleteTemplateButton templateId={t.id} />
                 </td>
               </tr>
             ))}

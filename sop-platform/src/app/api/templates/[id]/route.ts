@@ -31,3 +31,26 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
   return NextResponse.json(template)
 }
+
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions)
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+  }
+
+  const template = await prisma.sOPTemplate.findUnique({ where: { id: params.id } })
+  if (!template) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
+  if (session.user.role === 'ADMIN' && session.user.departmentId && session.user.departmentId !== template.departmentId) {
+    return NextResponse.json({ error: 'You can only delete templates for your department' }, { status: 403 })
+  }
+
+  const deletedTemplate = await prisma.sOPTemplate.update({
+    where: { id: params.id },
+    data: { isActive: false },
+  })
+
+  return NextResponse.json(deletedTemplate)
+}
