@@ -28,9 +28,16 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
   })
 
   const templates = await prisma.sOPTemplate.findMany({
-    where: { isActive: true, departmentId: project.departmentId },
-    select: { id: true, title: true },
+    where: { isActive: true },
+    select: { id: true, title: true, department: { select: { name: true } } },
+    orderBy: { title: 'asc' },
   })
+
+  const templatesWithDept = templates.map((template) => ({
+    id: template.id,
+    title: template.title,
+    departmentName: template.department.name,
+  }))
 
   const users = await prisma.user.findMany({
     where: { isActive: true },
@@ -53,7 +60,7 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
       </div>
 
       {/* Assign SOP form */}
-      <AssignSOPForm projectId={params.id} templates={templates} users={users} />
+      <AssignSOPForm projectId={params.id} templates={templatesWithDept} users={users} />
 
       {/* Timeline / assigned SOPs */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
