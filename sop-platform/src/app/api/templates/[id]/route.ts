@@ -47,10 +47,12 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     return NextResponse.json({ error: 'You can only delete templates for your department' }, { status: 403 })
   }
 
-  const deletedTemplate = await prisma.sOPTemplate.update({
-    where: { id: params.id },
-    data: { isActive: false },
-  })
+  await prisma.$transaction([
+    prisma.sOPSubmission.deleteMany({ where: { templateId: params.id } }),
+    prisma.sOPDraft.deleteMany({ where: { templateId: params.id } }),
+    prisma.projectSOP.deleteMany({ where: { templateId: params.id } }),
+    prisma.sOPTemplate.delete({ where: { id: params.id } }),
+  ])
 
-  return NextResponse.json(deletedTemplate)
+  return NextResponse.json({ success: true })
 }

@@ -12,9 +12,10 @@ export default async function TemplatesPage() {
   }
 
   // Admins see templates for their department, super admins see all
-  const where = session.user.role === 'ADMIN' && session.user.departmentId
-    ? { departmentId: session.user.departmentId }
-    : {}
+  const where = {
+    isActive: true,
+    ...(session.user.role === 'ADMIN' && session.user.departmentId ? { departmentId: session.user.departmentId } : {}),
+  }
 
   const templates = await prisma.sOPTemplate.findMany({
     where,
